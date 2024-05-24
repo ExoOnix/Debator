@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-
+import json
 
 User = get_user_model()
 
@@ -12,7 +12,13 @@ class Post(models.Model):
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    positions = models.CharField(max_length=1000, default=json.dumps(["Pro", "Against"]))
 
+    def set_position(self, lst):
+        self.positions = json.dumps(lst)
+
+    def get_position(self):
+        return json.loads(self.positions)
 
     def __str__(self):
         return self.title
@@ -26,6 +32,7 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     upvote = models.ManyToManyField(User, related_name="comment_upvotes", blank=True)
     downvote = models.ManyToManyField(User, related_name="comment_downvotes", blank=True)
+    position = models.CharField(max_length=1000, default="Pro")
     @property
     def upvotes_count(self):
         return self.upvote.count() - self.downvote.count()

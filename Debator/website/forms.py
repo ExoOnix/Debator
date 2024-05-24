@@ -29,6 +29,7 @@ class UploadForm(forms.Form):
     # )
     title = forms.CharField(label="Title", max_length=200, required=True)
     content = forms.CharField(widget=forms.Textarea(), required=True)
+    positions = forms.CharField(label="Positions (Input in commas without spaces)", max_length=1000, required=True)
     attachments = MultipleFileField(required=False)
 
 

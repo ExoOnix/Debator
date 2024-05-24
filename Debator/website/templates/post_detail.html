@@ -51,21 +51,38 @@
 
 
 <div class="card w-75 h-75 center-x mt-3 mb-4" style="width: 18rem;">
-    <h2 class="ms-3 mb-0 mt-1">Comments</h2>
+    <h2 class="ms-3 mb-0 mt-1">Reactions</h2>
     <div class="card-body">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+        {% for i in object.get_position %}
+            <li class="nav-item" role="presentation">
+    <button class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ i }}" data-bs-toggle="tab" data-bs-target="#tabpanel{{ i }}" type="button" role="tab" aria-controls="tabpanel{{ i }}" aria-selected="true">{{ i }}</button>
+  </li>
+        {% endfor %}
+</ul>
+<div class="tab-content" id="myTabContent">
+  {% for j in object.get_position %}
+  <div class="tab-pane fade show {% if forloop.first %}active{% endif %}" id="tabpanel{{ j }}" role="tabpanel" aria-labelledby="tabpanel{{j}}" tabindex="0">
         {% if user.is_authenticated %}
         <form action="." method="post">
             {% csrf_token %}
             {{ form }}
+            <input type="hidden" name="position" value="{{ j }}">
             <input type="submit" value="Submit" class="btn btn-success">
         </form>
         {% endif %}
-        {% for i in comments %}
-            {% if i.parent_comment == None %}
+        {% for i in comments%}
+    {% if i.parent_comment == None and i.position == j %}
             {% include 'components/comment.html' %}
             {% endif %}
-        {% endfor %}
+        {% endfor %}</div>
+
+
+  {% endfor %}
+</div>
+
     </div>
 </div>
 
 {% endblock %}
+

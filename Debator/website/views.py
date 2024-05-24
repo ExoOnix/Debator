@@ -71,7 +71,8 @@ class PostDetailView(DetailView, FormMixin):
         comment_instance = Comment(
             content=form.cleaned_data["content"],
             author=self.request.user,
-            parent_post=Post.objects.get(pk=self.kwargs['pk']),
+            parent_post=Post.objects.get(pk=self.kwargs["pk"]),
+            position=self.request.POST.get("position"),
         )
 
         comment_instance.save()
@@ -91,6 +92,7 @@ def Upload(request):
                     content=form.cleaned_data["content"],
                     author=request.user,
                 )
+                post_instance.set_position(form.cleaned_data["positions"].split(","))
                 post_instance.save()
                 print("cleaned data", form.cleaned_data)
 
