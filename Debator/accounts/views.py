@@ -3,9 +3,7 @@ from django.views import generic
 from .forms import UserRegisterForm
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect
-from website.recommend import Recommend
 
-recommend = Recommend()
 
 
 class SignUpView(generic.CreateView):
@@ -22,6 +20,6 @@ class SignUpView(generic.CreateView):
         # authenticate user then login
         user = authenticate(username=username, password=password)
         login(self.request, user)
-        recommend.Update()
+
 
         return HttpResponseRedirect("/")
