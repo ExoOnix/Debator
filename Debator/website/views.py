@@ -14,8 +14,8 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 
-from .models import Post, Community, Comment, Attachment, Reaction
-from .forms import UploadForm, CommentForm, CommunityCreateForm
+from .models import Post, Comment, Attachment
+from .forms import UploadForm, CommentForm
 
 
 class index(ListView):
@@ -34,24 +34,6 @@ class index(ListView):
         else:
             object_list = Post.objects.all().order_by("-created_at")
         return object_list
-
-class CommunityView(ListView):
-    model = Post
-    paginate_by = 100
-    template_name = "community.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        community = Community.objects.filter(name=self.kwargs["community"])
-
-        if len(community) > 0:
-            context["community"] = community[0]
-            context["exists"] = True
-        else:
-            context["exists"] = False
-        return context
-    def get_queryset(self):
-        return Post.objects.filter(community__name=self.kwargs["community"]).order_by('-created_at')
 
 
 class PostDetailView(DetailView, FormMixin):
@@ -74,20 +56,6 @@ class PostDetailView(DetailView, FormMixin):
         )
 
         context["comments"] = comments
-        context["upvotes"] = Reaction.objects.filter(
-            parent_post=self.kwargs["pk"], vote=True
-        )
-        context["downvotes"] = Reaction.objects.filter(
-            parent_post=self.kwargs["pk"], vote=False
-        )
-
-        if self.request.user.is_authenticated:
-            context["is_upvote"] = Reaction.objects.filter(
-                parent_post=self.kwargs["pk"], vote=True, user=self.request.user
-            )
-            context["is_downvote"] = Reaction.objects.filter(
-                parent_post=self.kwargs["pk"], vote=False, user=self.request.user
-            )
 
         return context
 
@@ -108,7 +76,7 @@ class PostDetailView(DetailView, FormMixin):
 
         comment_instance.save()
         return HttpResponseRedirect(
-            f"/c/{self.kwargs['community']}/{self.kwargs['pk']}"
+            f"/p/{self.kwargs['pk']}"
         )
 
 
@@ -122,7 +90,6 @@ def Upload(request):
                     title=form.cleaned_data["title"],
                     content=form.cleaned_data["content"],
                     author=request.user,
-                    community=Community.objects.get(id=int(request.POST.get("community"))),
                 )
                 post_instance.save()
                 print("cleaned data", form.cleaned_data)
@@ -142,40 +109,15 @@ def Upload(request):
                                 video=f
                             )
                             attachment_instance.save()
-                            recommend.Update()
-                return HttpResponseRedirect(f"/c/{Community.objects.get(id=int(request.POST.get('community'))).name}/{post_instance.pk}")
+                return HttpResponseRedirect(f"/p/{post_instance.pk}")
 
         # if a GET (or any other method) we'll create a blank form
         else:
             form = UploadForm()
-        return render(request, "upload.html", {"form": UploadForm, "communities": request.user.communities.all()})
+        return render(request, "upload.html", {"form": UploadForm})
     else:
         raise PermissionDenied
-def CreateCommunity(request):
-    if request.user.is_authenticated:
-        if request.method == "POST":
-            form = CommunityCreateForm(request.POST)
 
-            if form.is_valid():
-                if not Community.objects.filter(name=form.cleaned_data["name"]).exists():
-                    community_instance = Community(
-                        name=form.cleaned_data["name"],
-                        description=form.cleaned_data["description"],
-                        admin=request.user,
-                    )
-                    community_instance.save()
-                    community_instance.members.add(request.user)
-                    community_instance.save()
-
-                    return HttpResponseRedirect(
-                        f"/c/{form.cleaned_data['name']}"
-                    )
-
-        else:
-            form = CommunityCreateForm()
-        return render(request, "create-community.html", {"form": CommunityCreateForm})
-    else:
-        raise PermissionDenied
 
 def Reply(request, **kwargs):
     if request.user.is_authenticated:
@@ -183,7 +125,7 @@ def Reply(request, **kwargs):
             form = CommentForm(request.POST)
 
             if form.is_valid():
-                print(form.cleaned_data, kwargs["community"], kwargs["post_pk"], kwargs["pk"])
+                print(form.cleaned_data, kwargs["post_pk"], kwargs["pk"])
                 comment_instance = Comment(
                     content=form.cleaned_data["content"],
                     author=request.user,
@@ -193,7 +135,7 @@ def Reply(request, **kwargs):
 
                 comment_instance.save()
                 return redirect(
-                    f"/c/{kwargs['community']}/{kwargs['post_pk']}"
+                    f"/p/{kwargs['post_pk']}"
                 )
         else:
             redirect("/")
@@ -205,7 +147,7 @@ def DeleteComment(request, **kwargs):
     if request.user.is_authenticated:
         if request.user.pk == Comment.objects.get(pk=kwargs["pk"]).author.pk or request.user.is_superuser == True:
             Comment.objects.get(pk=kwargs["pk"]).delete()
-            return redirect(f"/c/{kwargs['community']}/{kwargs['post_pk']}")
+            return redirect(f"/p/{kwargs['post_pk']}")
         else:
             raise PermissionDenied
     else:
@@ -214,71 +156,11 @@ def DeleteComment(request, **kwargs):
 
 def DeletePost(request, **kwargs):
     if request.user.is_authenticated:
-        if (
-            request.user.pk == Post.objects.get(pk=kwargs["pk"]).author.pk
-            or request.user.is_superuser == True
-        ):
+        if request.user.has_perm("website.delete_post"):
             Post.objects.get(pk=kwargs["pk"]).delete()
-            return redirect(f"/c/{kwargs['community']}")
+            return redirect(f"/")
         else:
             raise PermissionDenied
-    else:
-        raise PermissionDenied
-
-
-def JoinCommunity(request, **kwargs):
-    if request.user.is_authenticated:
-        community = Community.objects.get(name=kwargs["community"])
-        community.members.add(request.user)
-        community.save()
-        return redirect(f"/c/{kwargs['community']}")
-    else:
-        raise PermissionDenied
-
-
-def LeaveCommunity(request, **kwargs):
-    if request.user.is_authenticated:
-        community = Community.objects.get(name=kwargs["community"])
-        community.members.remove(request.user)
-        community.save()
-        return redirect(f"/c/{kwargs['community']}")
-    else:
-        raise PermissionDenied
-
-
-def UpvotePost(request, **kwargs):
-    if request.user.is_authenticated:
-        reaction = Reaction.objects.filter(
-            parent_post=kwargs["pk"], user=request.user
-        )
-        if len(reaction) > 0:
-            reaction.delete()
-        else:
-            reaction = Reaction(
-                user=request.user,
-                parent_post=Post.objects.get(pk=kwargs["pk"]),
-                vote=True
-            )
-            reaction.save()
-        return redirect(f"/c/{kwargs['community']}/{kwargs['pk']}")
-    else:
-        raise PermissionDenied
-
-def DownvotePost(request, **kwargs):
-    if request.user.is_authenticated:
-        reaction = Reaction.objects.filter(
-            parent_post=kwargs["pk"], user=request.user
-        )
-        if len(reaction) > 0:
-            reaction.delete()
-        else:
-            reaction = Reaction(
-                user=request.user,
-                parent_post=Post.objects.get(pk=kwargs["pk"]),
-                vote=False
-            )
-            reaction.save()
-        return redirect(f"/c/{kwargs['community']}/{kwargs['pk']}")
     else:
         raise PermissionDenied
 
@@ -295,7 +177,7 @@ def UpvoteComment(request, **kwargs):
                 comment = Comment.objects.get(pk=kwargs["pk"])
                 comment.upvote.add(request.user)
                 comment.save()
-        return redirect(f"/c/{kwargs['community']}/{kwargs['post_pk']}")
+        return redirect(f"/p/{kwargs['post_pk']}")
     else:
         raise PermissionDenied
 
@@ -311,6 +193,6 @@ def DownvoteComment(request, **kwargs):
                 comment = Comment.objects.get(pk=kwargs["pk"])
                 comment.downvote.add(request.user)
                 comment.save()
-        return redirect(f"/c/{kwargs['community']}/{kwargs['post_pk']}")
+        return redirect(f"/p/{kwargs['post_pk']}")
     else:
         raise PermissionDenied
