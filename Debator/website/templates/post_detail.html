@@ -52,6 +52,11 @@
 
 <div class="card w-75 h-75 center-x mt-3 mb-4" style="width: 18rem;">
     <h2 class="ms-3 mb-0 mt-1">Reactions</h2>
+    <div class="btn-group" role="group" aria-label="Basic example">
+    {% for i in object.get_position %}
+    <a class="btn">{{ i }}</a>
+    {% endfor %}
+    </div>
     <div class="card-body">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
         {% for i in object.get_position %}

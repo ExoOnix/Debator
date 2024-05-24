@@ -13,10 +13,10 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     positions = models.CharField(max_length=1000, default=json.dumps(["Pro", "Against"]))
+    pos_votes = models.TextField(default=[])
 
     def set_position(self, lst):
         self.positions = json.dumps(lst)
-
     def get_position(self):
         return json.loads(self.positions)
 
