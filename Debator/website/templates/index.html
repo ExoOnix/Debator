@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+{% for post in page_obj %}
+
+    <div class="card post mt-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ post }}</h5>
+            <h6 class="card-subtitle mb-2 text-body-secondary"><a class="button-link" href="/c/{{ post.community }}">{{ post.community }}</a> - {{ post.author }}</h6>
+            {% if post.attachments.all|length > 0 %}
+        <center>
+        <div id="carouselExample{{ post.pk }}" class="carousel slide">
+  <div class="carousel-inner">
+    {% for attachment in post.attachments.all %}
+    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        {% if attachment.image %}
+        <img src="{{ attachment.image.url }}", class="d-block attachment-photo">
+        {% else %}
+        <video class="d-block w-75" controls>
+        <source src="{{ attachment.video.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+        </video>
+        {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample{{ post.pk }}" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample{{ post.pk }}" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+</center>
+        {% endif %}
+            <p class="card-text">{{ post.content|slice:":600" }}</p>
+            <a href="/c/{{post.community}}/{{post.pk}}" class="card-link button-link">Open</a>
+        </div>
+    </div>
+
+
+
+{% endfor %}
+
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+{% endblock %}

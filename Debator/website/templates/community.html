@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not exists %}
+<h1>Community not found</h1>
+<a href="{% url 'index' %}" class="button-link">Go home</a>
+{% else %}
+<center><h1>{{ community.name }}</h1></center>
+<center><p>{{ community.description }}</p></center>
+{% if community.name not in user.communities.all|join:", " %}
+<center><a class="btn btn-outline-success" href="/c/{{ community.name }}/join">Join Community</a></center>
+{% elif community.name in user.communities.all|join:", " and community.admin != user %}
+<center><a class="btn btn-outline-danger" href="/c/{{ community.name }}/leave">Leave Community</a></center>
+{% endif %}
+{% endif %}
+
+{% for post in page_obj %}
+
+    <div class="card post mt-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ post }}</h5>
+            <h6 class="card-subtitle mb-2 text-body-secondary">{{ post.community }} - {{ post.author }}</h6>
+             {% if post.attachments.all|length > 0 %}
+        <center>
+        <div id="carouselExample" class="carousel slide">
+  <div class="carousel-inner">
+    {% for attachment in post.attachments.all %}
+    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        {% if attachment.image %}
+        <img src="{{ attachment.image.url }}", class="d-block attachments-photo">
+        {% else %}
+        <video class="d-block w-75" controls>
+        <source src="{{ attachment.video.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+        </video>
+        {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+</center>
+        {% endif %}
+            <p class="card-text">{{ post.content|slice:":600" }}</p>
+            <a href="{{post.community}}/{{post.pk}}" class="card-link button-link">Open</a>
+        </div>
+    </div>
+
+
+
+{% endfor %}
+
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+{% endblock %}

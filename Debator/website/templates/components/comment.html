@@ -1,0 +1,46 @@
+{% load static %}
+
+<div class="card mt-1">
+    <div class="card-body comment-content">
+    {{ i.author }} - {{ i.created_at|timesince }} ago<br>
+    {{ i.content }}
+    
+        {% if user.is_authenticated %}
+        <div class="">
+            <a class="btn" {% if user.is_authenticated %} href="/c/{{ object.community.name }}/{{ object.pk }}/upvote/{{ i.pk }}" {% endif %}>
+                <img class="{% if i in user.comment_upvotes.all %}selected-vote{% endif %}" src="{% static 'icons/custom/outline/arrow-up.svg' %}">
+                {{ i.upvote.all|length }}
+            </a>
+            <a class="btn" {% if user.is_authenticated %} href="/c/{{ object.community.name }}/{{ object.pk }}/downvote/{{ i.pk }}"{% endif %}>
+                <img class="{% if i in user.comment_downvotes.all %}selected-vote{%endif%}" src="{% static 'icons/custom/outline/arrow-down.svg' %}">
+                {{ i.downvote.all|length }}
+            </a>
+        </div>
+
+  <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#commentform{{ i.pk }}" aria-expanded="false" aria-controls="commentform{{ i.pk }}">
+    <img src="{% static 'icons/custom/outline/messages.svg' %}" alt="Comment">
+  </button>
+  {% if user.pk == i.author.pk or user.is_superuser %}
+  <a class="btn" href="/c/{{ object.community }}/{{object.pk }}/delete/{{ i.pk }}">
+    <img src="{% static 'icons/custom/outline/xbox-x.svg' %}" alt="Delete comment">
+  </a>
+  {% endif %}
+        <div class="collapse" id="commentform{{ i.pk }}">
+        <form action="/c/{{ object.community }}/{{ object.pk }}/reply/{{ i.pk }}" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit" class="btn btn-success">
+        </form>
+        </div>
+        {% endif %}
+
+    {% if i.children %}
+    
+        {% for i in i.children.all|dictsortreversed:"upvotes_count" %}
+            {% include 'components/comment.html' %}
+        {% endfor %}
+        
+    {% endif %}
+    </div>
+</div>
+
