@@ -173,6 +173,31 @@
                 })
             })()
     </script>
+    <script>
+        window.onbeforeunload = function () {
+        var scrollPos;
+        if (typeof window.pageYOffset != 'undefined') {
+            scrollPos = window.pageYOffset;
+        }
+        else if (typeof document.compatMode != 'undefined' && document.compatMode != 'BackCompat') {
+            scrollPos = document.documentElement.scrollTop;
+        }
+        else if (typeof document.body != 'undefined') {
+            scrollPos = document.body.scrollTop;
+        }
+        document.cookie = "scrollTop=" + scrollPos + "URL=" + window.location.href  + "; expires=" + new Date(new Date().getTime() + 1 * 60 * 60 * 1000).toUTCString() + "; path=/";
+    }
+
+window.onload = function () {
+    if (document.cookie.includes(window.location.href)) {
+        if (document.cookie.match(/scrollTop=([^;]+)(;|$)/) != null) {
+            var arr = document.cookie.match(/scrollTop=([^;]+)(;|$)/);
+            document.documentElement.scrollTop = parseInt(arr[1]);
+            document.body.scrollTop = parseInt(arr[1]);
+        }
+    }
+}
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>

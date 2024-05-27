@@ -10,3 +10,11 @@ register = template.Library()
 @stringfilter
 def markdown(value):
     return md.markdown(value, extensions=["markdown.extensions.fenced_code"])
+
+
+@register.filter(name="dict_value_or_null")
+def dict_value_or_null(dict, key):
+    if key in dict:
+        return dict[key]
+    else:
+        return "null"

@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 {% load static %}
-
-
-
+{% load extras %}
 
 <div class="card w-75 center-x mt-4 overflow-auto" style="width: 18rem; height: 75vh">
     <div class="card-body">
@@ -20,74 +18,91 @@
         {% if post.attachments.all|length > 0 %}
         <center>
         <div id="carouselExample" class="carousel slide">
-  <div class="carousel-inner">
-{% for attachment in post.attachments.all %}
-    <div class="carousel-item {% if forloop.first %}active{% endif %}">
-        {% if attachment.image %}
-        <img src="{{ attachment.image.url }}", class="d-block attachment-photo">
-        {% else %}
-        <video class="d-block w-75" controls>
-        <source src="{{ attachment.video.url }}" type="video/mp4">
-        Your browser does not support the video tag.
-        </video>
+            <div class="carousel-inner">
+                {% for attachment in post.attachments.all %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        {% if attachment.image %}
+                        <img src="{{ attachment.image.url }}" class="d-block attachment-photo">
+                        {% else %}
+                        <video class="d-block w-75" controls>
+                            <source src="{{ attachment.video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+        </center>
         {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
-</div>
-</center>
-        {% endif %}
-        <p>{{ object.content }}</p>
+        <p>{{ object.content|markdown|safe }}</p>
     </div>
 </div>
-
 
 <div class="card w-75 h-75 center-x mt-3 mb-4" style="width: 18rem;">
     <h2 class="ms-3 mb-0 mt-1">Reactions</h2>
     <div class="btn-group" role="group" aria-label="Basic example">
-    {% for i in object.get_position %}
-    <a class="btn">{{ i }}</a>
-    {% endfor %}
+        {% for i in object.get_position %}
+            <a href="/p/{{ object.pk }}/vote/{{ i }}" class="btn {% if i in user.reactions.all|join:" // " %}selected-pos{% endif %}">{{ i }} - {{ reaction_counts|dict_value_or_null:i }}</a>
+        {% endfor %}
     </div>
     <div class="card-body">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
-        {% for i in object.get_position %}
-            <li class="nav-item" role="presentation">
-    <button class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ i }}" data-bs-toggle="tab" data-bs-target="#tabpanel{{ i }}" type="button" role="tab" aria-controls="tabpanel{{ i }}" aria-selected="true">{{ i }}</button>
-  </li>
-        {% endfor %}
-</ul>
-<div class="tab-content" id="myTabContent">
-  {% for j in object.get_position %}
-  <div class="tab-pane fade show {% if forloop.first %}active{% endif %}" id="tabpanel{{ j }}" role="tabpanel" aria-labelledby="tabpanel{{j}}" tabindex="0">
-        {% if user.is_authenticated %}
-        <form action="." method="post">
-            {% csrf_token %}
-            {{ form }}
-            <input type="hidden" name="position" value="{{ j }}">
-            <input type="submit" value="Submit" class="btn btn-success">
-        </form>
-        {% endif %}
-        {% for i in comments%}
-    {% if i.parent_comment == None and i.position == j %}
-            {% include 'components/comment.html' %}
-            {% endif %}
-        {% endfor %}</div>
-
-
-  {% endfor %}
-</div>
-
+            {% for i in object.get_position %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ i.split|join:"-" }}" data-bs-toggle="tab" data-bs-target="#tabpanel{{ i.split|join:"-" }}" type="button" role="tab" aria-controls="tabpanel{{ i.split|join:"-" }}" aria-selected="true">{{ i }}</button>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            {% for j in object.get_position %}
+                <div class="tab-pane fade show {% if forloop.first %}active{% endif %}" id="tabpanel{{ j.split|join:"-" }}" role="tabpanel" aria-labelledby="tabpanel{{j.split|join:"-"}}" tabindex="0">
+                    {% if user.is_authenticated %}
+                        <form action="." method="post">
+                            {% csrf_token %}
+                            {{ form }}
+                            <input type="hidden" name="position" value="{{ j }}">
+                            <input type="submit" value="Submit" class="btn btn-success">
+                        </form>
+                    {% endif %}
+                    {% for i in comments %}
+                        {% if i.parent_comment == None and i.position == j %}
+                            {% include 'components/comment.html' %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
-{% endblock %}
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    // Retrieve the last selected tab from sessionStorage
+    const lastSelectedTab = sessionStorage.getItem('selectedTab');
+    if (lastSelectedTab) {
+        const tabElement = document.querySelector(`#${lastSelectedTab}`);
+        const tabInstance = new bootstrap.Tab(tabElement);
+        tabInstance.show();
+    }
 
+    // Add event listener to each tab to save the selected tab in sessionStorage
+    const tabButtons = document.querySelectorAll('#myTab button');
+    tabButtons.forEach((button) => {
+        button.addEventListener('shown.bs.tab', (event) => {
+            const selectedTabId = event.target.id;
+            sessionStorage.setItem('selectedTab', selectedTabId);
+        });
+    });
+});
+</script>
+
+{% endblock %}

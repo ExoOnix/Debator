@@ -19,6 +19,7 @@ urlpatterns = [
         name="delete",
     ),
     path("p/<int:pk>/delete", views.DeletePost, name="delete-post"),
+    path("p/<str:post_pk>/vote/<str:pos>", views.AddVote, name="votepos"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

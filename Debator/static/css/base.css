@@ -51,3 +51,11 @@
 .selected-vote {
     filter: invert(6%) sepia(90%) saturate(6551%) hue-rotate(2deg) brightness(92%) contrast(107%);
 }
+
+.selected-pos {
+    color: rgb(145, 0, 0);
+}
+
+.selected-pos:hover {
+    color: rgb(182, 0, 0);
+}

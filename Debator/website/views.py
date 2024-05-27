@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 
-from .models import Post, Comment, Attachment
+from .models import Post, Comment, Attachment, PosVote
 from .forms import UploadForm, CommentForm
 
 
@@ -57,6 +57,14 @@ class PostDetailView(DetailView, FormMixin):
 
         context["comments"] = comments
 
+        # Calculate reaction counts for each position
+        positions = self.object.get_position()
+        reaction_counts = {
+            position: PosVote.objects.filter(position=position).count()
+            for position in positions
+        }
+        context["reaction_counts"] = reaction_counts
+
         return context
 
     def post(self, request, *args, **kwargs):
@@ -67,7 +75,7 @@ class PostDetailView(DetailView, FormMixin):
         else:
             return self.form_invalid(form)
     def form_valid(self, form):
-        print(form.cleaned_data)
+        print(form.cleaned_data, self.request.POST.get("position"))
         comment_instance = Comment(
             content=form.cleaned_data["content"],
             author=self.request.user,
@@ -195,6 +203,23 @@ def DownvoteComment(request, **kwargs):
                 comment = Comment.objects.get(pk=kwargs["pk"])
                 comment.downvote.add(request.user)
                 comment.save()
+        return redirect(f"/p/{kwargs['post_pk']}")
+    else:
+        raise PermissionDenied
+
+
+def AddVote(request, **kwargs):
+    if request.user.is_authenticated:
+        if not PosVote.objects.filter(post=Post.objects.get(pk=kwargs["post_pk"]), author=request.user):
+            vote = PosVote(
+                author=request.user,
+                post=Post.objects.get(pk=kwargs["post_pk"]),
+                position=kwargs["pos"],
+            )
+            vote.save()
+        else:
+            vote = PosVote.objects.get(post=Post.objects.get(pk=kwargs["post_pk"]), author=request.user)
+            vote.delete()
         return redirect(f"/p/{kwargs['post_pk']}")
     else:
         raise PermissionDenied

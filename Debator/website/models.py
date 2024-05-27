@@ -13,7 +13,6 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     positions = models.CharField(max_length=1000, default=json.dumps(["Pro", "Against"]))
-    pos_votes = models.TextField(default=[])
 
     def set_position(self, lst):
         self.positions = json.dumps(lst)
@@ -23,6 +22,13 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
+class PosVote(models.Model):
+    position = models.CharField(max_length=1000)
+    post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="reaction")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reactions")
+
+    def __str__(self):
+        return self.position
 
 class Comment(models.Model):
     content = models.TextField()
