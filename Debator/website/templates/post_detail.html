@@ -55,7 +55,7 @@
 </div></center>
     <div class="btn-group" role="group" aria-label="Basic example">
         {% for i in object.get_position %}
-            <a href="/p/{{ object.pk }}/vote/{{ i }}" class="btn {% if i in user.reactions.all|join:" // " %}selected-pos{% endif %}">{{ i }} - {{ reaction_counts|dict_value_or_null:i }}</a>
+            <a {% if user.is_authenticated %}href="/p/{{ object.pk }}/vote/{{ i }}"{% endif %} class="btn {% if i in user.reactions.all|join:" // " %}selected-pos{% endif %}">{{ i }} - {{ reaction_counts|dict_value_or_null:i }}</a>
         {% endfor %}
     </div>
     <div class="card-body">

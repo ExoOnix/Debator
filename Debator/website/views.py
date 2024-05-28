@@ -16,7 +16,7 @@ from .forms import UploadForm, CommentForm
 
 class index(ListView):
     model = Post
-    paginate_by = 100
+    paginate_by = 20
     template_name = "index.html"
 
     def get_context_data(self, **kwargs):
