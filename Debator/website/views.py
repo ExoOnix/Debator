@@ -9,10 +9,6 @@ from django.db.models import Count
 
 import filetype
 
-# Reccomendations
-import pandas as pd
-import numpy as np
-import scipy.stats
 
 from .models import Post, Comment, Attachment, PosVote
 from .forms import UploadForm, CommentForm

@@ -49,6 +49,10 @@
 
 <div class="card w-75 h-75 center-x mt-3 mb-4" style="width: 18rem;">
     <h2 class="ms-3 mb-0 mt-1">Reactions</h2>
+    <center><div class="alert alert-danger w-75 mt-3" role="alert">
+  <p style="margin: 0px;">Upvote or Downvote comments based on their quality, not opinion.</p>
+
+</div></center>
     <div class="btn-group" role="group" aria-label="Basic example">
         {% for i in object.get_position %}
             <a href="/p/{{ object.pk }}/vote/{{ i }}" class="btn {% if i in user.reactions.all|join:" // " %}selected-pos{% endif %}">{{ i }} - {{ reaction_counts|dict_value_or_null:i }}</a>
