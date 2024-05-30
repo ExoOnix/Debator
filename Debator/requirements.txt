@@ -1,0 +1,9 @@
+Django==4.2.11
+pillow==10.3.0
+filetype==1.2.0
+django-cleanup==8.1.0
+Markdown==3.6
+gunicorn
+psycopg2-binary
+django-environ
+gevent 

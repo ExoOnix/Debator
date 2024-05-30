@@ -1,0 +1,35 @@
+version: '3.3'
+
+volumes:
+  postgres-data:
+
+services:
+  backend:
+    build:
+      context: ./Debator
+    depends_on:
+      - db
+    volumes:
+      - ./Debator:/app
+    command: /gunicorn.sh
+    entrypoint: /entrypoint.sh
+    restart: on-failure
+    env_file: .env.prod
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file: .env.prod
+
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./Debator/media/:/media/
+      - ./Debator/staticfiles/:/staticfiles/
+      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro

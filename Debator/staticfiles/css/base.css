@@ -1,0 +1,61 @@
+@media (min-width: 992px) {
+    .navbar-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .dropdown-menu {
+        right: auto !important;
+        left: 50%;
+        transform: translateX(-70%);
+    }
+    .attachment-photo {
+        width: 75%;
+    }
+}
+
+.attachment-photo {
+    width: 50%;
+}
+
+
+
+.button-link {
+    text-decoration: none;
+    color: #0047ba;
+}
+
+.post {
+    width: 80%;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.center-x {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.comment-content {
+    overflow: auto;
+}
+
+.selected-vote {
+    filter: invert(6%) sepia(90%) saturate(6551%) hue-rotate(2deg) brightness(92%) contrast(107%);
+}
+
+.selected-pos {
+    color: rgb(145, 0, 0);
+}
+
+.selected-pos:hover {
+    color: rgb(182, 0, 0);
+}
